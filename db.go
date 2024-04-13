@@ -45,6 +45,13 @@ type Subscriber struct {
 	valid      bool
 }
 
+type Notification struct {
+	id         string
+	title      string
+	content    string
+	created_at string
+}
+
 func (s *Server) InsertSub(name string) (Subscriber, error) {
 	query := `
 	INSERT INTO subs(id, name, password)
@@ -81,4 +88,39 @@ func (s *Server) GetSub(id string) (Subscriber, error) {
 	sub.valid = true
 
 	return sub, nil
+}
+
+func (s *Server) InsertNotif(title string, content string) (Notification, error) {
+	query := `
+	INSERT INTO notifications(id, title, content)
+	VALUES($1, $2, $3);
+	`
+
+	notif := Notification{
+		id:         RanHash(8),
+		title:      title,
+		content:    content,
+		created_at: time.Now().String(),
+	}
+	_, err := s.db.Exec(query, notif.id, notif.title, notif.content)
+	if err != nil {
+		return Notification{}, err
+	}
+
+	return notif, nil
+}
+
+func (s *Server) GetNotification(id string) (Notification, error) {
+	query := `
+	SELECT * from notifications where id=$1;
+	`
+
+	var notif Notification
+	rows := s.db.QueryRow(query, id)
+	err := rows.Scan(&notif.id, &notif.title, &notif.content, &notif.created_at)
+	if err != nil {
+		return Notification{}, err
+	}
+
+	return notif, nil
 }
