@@ -1,0 +1,4 @@
+2024-04-13 (B) Setup Logging
+2024-04-13 (A) Priviledge Management for the Broadcaster
+2024-04-13 Setup a timer for the notification to go off
+2024-04-13 Store all the notifications in the db
