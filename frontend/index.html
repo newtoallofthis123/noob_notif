@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Notification</title>
+</head>
+
+<body>
+    <h1 class="text-2xl font-bold mb-4 px-2">
+        Client Notification Frontend
+    </h1>
+    <form id="login">
+        <input type="text" id="id" name="id" class="border-2 border-black mx-2">
+        <input type="text" id="password" name="password" class="border-2 border-black mx-2">
+        <button class="border-2 border-black px-2">
+            Login
+        </button>
+    </form>
+    <div id="bin" class="px-4 py-2 border-black border-2 my-3 mx-2 w-3/5"></div>
+</body>
+
+<script>
+    document.getElementById("login").addEventListener("submit", (s) => {
+        console.log("Hello!")
+        s.preventDefault();
+        let id = document.getElementById("id");
+        let password = document.getElementById("password")
+        let socket = new WebSocket("ws://localhost:1234/notif")
+        document.cookie = 'Authorization=' + id.value + "|" + password.value + '; path=/';
+        let msgBin = document.getElementById("bin")
+
+        socket.onmessage = (e) => {
+            msgBin.innerHTML += '<p>' + e.data + '</p>'
+        }
+    })
+</script>
+
+</html>

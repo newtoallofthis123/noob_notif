@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -27,19 +28,15 @@ func NewServer() *Server {
 }
 
 func (s *Server) StartServer(port string) {
-	http.HandleFunc("/", s.handleHome)
 	http.HandleFunc("/subscriber", s.handleSubscribe)
 	http.HandleFunc("/notif", s.handleNotification)
 	http.HandleFunc("/broadcast", s.handleBroadCast)
+	http.HandleFunc("/", handleFrontend)
 
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (s *Server) handleHome(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprintf(w, "Hello from notif v.0.1")
 }
 
 func (s *Server) handleSubscribe(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +66,16 @@ func (s *Server) handleSubscribe(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleNotification(w http.ResponseWriter, r *http.Request) {
 	auth_header := r.Header.Get("Authorization")
-	parsed := strings.Split(auth_header, ";")
+	if auth_header == "" {
+		auth_cookie, err := r.Cookie("Authorization")
+		if err != nil {
+			fmt.Fprintln(w, "Unable to parse header nor cookie")
+			return
+		}
+
+		auth_header = auth_cookie.Value
+	}
+	parsed := strings.Split(auth_header, "|")
 	id := parsed[0]
 	password := parsed[1]
 	if id == "" || password == "" {
@@ -99,6 +105,7 @@ func (s *Server) handleNotification(w http.ResponseWriter, r *http.Request) {
 
 	s.subs[ws] = sub
 	ws.WriteMessage(websocket.TextMessage, []byte("Connected to the notification server"))
+	fmt.Printf("%s with addr %s connected!\n", sub.name, ws.RemoteAddr())
 }
 
 func (s *Server) handleBroadCast(w http.ResponseWriter, r *http.Request) {
@@ -114,14 +121,28 @@ func (s *Server) handleBroadCast(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, "msg attr not found")
 			return
 		}
+		count := 0
 
 		for conn, sub := range s.subs {
 			if sub.valid {
 				conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("%s! %s", sub.name, msg)))
+				count++
 			}
 		}
-		fmt.Fprintln(w, "Broadcasted Notification!")
+		fmt.Fprintf(w, "Broadcasted Notification to %d clients!\n", count)
 	} else {
 		fmt.Fprintln(w, "Post only :)")
 	}
+}
+
+func handleFrontend(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		fmt.Fprintln(w, "Get only :)")
+	}
+	content, err := os.ReadFile("frontend/index.html")
+	if err != nil {
+		fmt.Fprintln(w, "Error reading index.html to send to browser")
+	}
+
+	fmt.Fprintln(w, string(content))
 }
