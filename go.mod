@@ -8,4 +8,7 @@ require (
 	github.com/lib/pq v1.10.9
 )
 
-require golang.org/x/net v0.17.0 // indirect
+require (
+	github.com/newtoallofthis123/ranhash v0.1.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
+)

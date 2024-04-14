@@ -5,6 +5,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/newtoallofthis123/ranhash"
 )
 
 func NewDbInstance() *sql.DB {
@@ -59,9 +60,9 @@ func (s *Server) InsertSub(name string) (Subscriber, error) {
 	`
 
 	sub := Subscriber{
-		id:         RanHash(10),
+		id:         ranhash.RanHash(10),
 		name:       name,
-		password:   RanHash(16),
+		password:   ranhash.RanHash(16),
 		created_at: time.Now().String(),
 		valid:      true,
 	}
@@ -97,7 +98,7 @@ func (s *Server) InsertNotif(title string, content string) (Notification, error)
 	`
 
 	notif := Notification{
-		id:         RanHash(8),
+		id:         ranhash.RanHash(8),
 		title:      title,
 		content:    content,
 		created_at: time.Now().String(),
